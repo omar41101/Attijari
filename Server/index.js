@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import userRoutes from './Routes/UserRoute.js'
 import bankAccountRoutes from './Routes/BankAccountRoute.js'
+import cardRoutes from './Routes/CardRoute.js'
 import BankAccount from './models/BankAccount.js'; // Import BankAccount model
 import connectDB from "./config/db.js";
 //import uploadRoutes from "./routes/uploadRoutes.js"
@@ -18,6 +19,7 @@ app.use(cookieParser());
 
 app.use("/api/users", userRoutes)
 app.use("/api/bankaccounts", bankAccountRoutes)
+app.use("/api/cards", cardRoutes)
 //app.use("/api/category",categoryRoutes)
 //app.use("/api/products", productRoutes)
 //app.use("/api/upload", uploadRoutes)

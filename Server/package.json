@@ -1,7 +1,8 @@
 {
-  "name": "o5t-marwa",
+  "name": "Fehri-marwa",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,6 +21,7 @@
     "lucide-react": "^0.513.0",
     "mongoose": "^8.15.0",
     "nodemon": "^3.1.10",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "uuid": "^11.1.0"
   }
 }
