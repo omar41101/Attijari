@@ -25,7 +25,7 @@ export default function TransactionsPage() {
 
       try {
         const response = await axios.get(
-          `http://192.168.100.112:1919/api/bankaccounts/${accountId}/transactions`,
+          `http://192.168.1.77:1919/api/bankaccounts/${accountId}/transactions`,
           {
             headers: { Authorization: `Bearer ${user.token}` },
           }

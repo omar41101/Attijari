@@ -1,356 +1,440 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import axios from 'axios';
-import { useAuth } from '../../context/auth';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+"use client"
 
-const API_BASE = 'http://192.168.100.112:1919/api';
+import { useState, useEffect } from "react"
+import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native"
+import axios from "axios"
+import { useAuth } from "../../context/auth"
+import { useRouter } from "expo-router"
+import { Ionicons } from "@expo/vector-icons"
+import { LinearGradient } from "expo-linear-gradient"
+
+const API_BASE = "http://192.168.1.77:1919/api"
 
 const CreateBankAccount = () => {
-  const { user } = useAuth();
+  const { user } = useAuth()
   const [form, setForm] = useState({
-    accountNumber: '',
-    accountType: '',
-    balance: '',
-    currency: '',
-    status: '',
-    interestRate: '',
-    minimumBalance: '',
-    userId: '',
-  });
-  const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const router = useRouter();
+    accountNumber: "",
+    accountType: "",
+    balance: "",
+    currency: "",
+    status: "",
+    interestRate: "",
+    minimumBalance: "",
+    userId: "",
+  })
+  const [loading, setLoading] = useState(false)
+  const [users, setUsers] = useState([])
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
+  const router = useRouter()
 
-  if (!user?.isAdmin) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-        <Text style={{ fontSize: 18, color: 'red', textAlign: 'center' }}>
-          Access denied. Admins only.
-        </Text>
-      </View>
-    );
+  const fetchUsers = async () => {
+    setUsersLoading(true)
+    try {
+      const res = await axios.get(`${API_BASE}/users`, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      })
+      setUsers(res.data)
+    } catch (error) {
+      Alert.alert("Error", error.response?.data?.message || error.message)
+    } finally {
+      setUsersLoading(false)
+    }
   }
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      setUsersLoading(true);
-      try {
-        const res = await axios.get(`${API_BASE}/users`, {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-          },
-        });
-        setUsers(res.data);
-      } catch (error) {
-        Alert.alert('Error', error.response?.data?.message || error.message);
-      } finally {
-        setUsersLoading(false);
-      }
-    };
-    fetchUsers();
-  }, [user]);
+    if (user?.isAdmin) {
+      fetchUsers()
+    }
+  }, [user])
+
+  if (!user?.isAdmin) {
+    return (
+      <View style={styles.accessDenied}>
+        <Ionicons name="shield-outline" size={64} color="#ef4444" />
+        <Text style={styles.accessDeniedText}>Access denied. Admins only.</Text>
+      </View>
+    )
+  }
 
   const handleChange = (name, value) => {
-    setForm({ ...form, [name]: value });
-  };
+    setForm({ ...form, [name]: value })
+  }
 
   const handleUserSelect = (userId) => {
-    setSelectedUser(userId);
-    setForm({ ...form, userId });
-  };
+    setSelectedUser(userId)
+    setForm({ ...form, userId })
+  }
 
   const handleSubmit = async () => {
-    if (!form.accountNumber || !form.accountType || form.balance === '' || !form.currency || !form.userId) {
-      Alert.alert('Error', 'Please fill in all required fields.');
-      return;
+    if (!form.accountNumber || !form.accountType || form.balance === "" || !form.currency || !form.userId) {
+      Alert.alert("Error", "Please fill in all required fields.")
+      return
     }
-    setLoading(true);
+    setLoading(true)
     try {
       const res = await axios.post(
         `${API_BASE}/bankaccounts`,
         {
           ...form,
-          balance: parseFloat(form.balance),
-          interestRate: form.interestRate ? parseFloat(form.interestRate) : undefined,
-          minimumBalance: form.minimumBalance ? parseFloat(form.minimumBalance) : undefined,
+          balance: Number.parseFloat(form.balance),
+          interestRate: form.interestRate ? Number.parseFloat(form.interestRate) : undefined,
+          minimumBalance: form.minimumBalance ? Number.parseFloat(form.minimumBalance) : undefined,
         },
         {
           headers: {
             Authorization: `Bearer ${user?.token}`,
           },
-        }
-      );
-      Alert.alert('Success', 'Bank account created successfully!');
+        },
+      )
+      Alert.alert("Success", "Bank account created successfully!")
       setForm({
-        accountNumber: '',
-        accountType: '',
-        balance: '',
-        currency: '',
-        status: '',
-        interestRate: '',
-        minimumBalance: '',
-        userId: selectedUser || '',
-      });
+        accountNumber: "",
+        accountType: "",
+        balance: "",
+        currency: "",
+        status: "",
+        interestRate: "",
+        minimumBalance: "",
+        userId: selectedUser || "",
+      })
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || error.message);
+      Alert.alert("Error", error.response?.data?.message || error.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.adminCard}>
-        <Text style={styles.title}>Create Bank Account (Admin)</Text>
-        <Text style={styles.subtitle}>Select a user to add a bank account:</Text>
-        <View style={styles.formSection}>
+    <View style={styles.container}>
+      <LinearGradient colors={["#43e97b", "#38f9d7"]} style={styles.header}>
+        <Text style={styles.title}>Create Bank Account</Text>
+        <Text style={styles.subtitle}>Select a user to add a bank account</Text>
+      </LinearGradient>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.adminCard}>
           <Text style={styles.sectionTitle}>All Users</Text>
           {usersLoading ? (
-            <ActivityIndicator size="large" color="#007AFF" style={{ marginVertical: 16 }} />
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#43e97b" />
+              <Text style={styles.loadingText}>Loading users...</Text>
+            </View>
           ) : (
             <View style={styles.usersList}>
               {users.map((user) => (
                 <View key={user._id} style={styles.userCard}>
+                  <View style={styles.userIcon}>
+                    <Text style={styles.userInitial}>{(user.username || user.email).charAt(0).toUpperCase()}</Text>
+                  </View>
                   <View style={styles.userInfo}>
-                    <Text style={styles.userName}>{user.username || 'No username'}</Text>
+                    <Text style={styles.userName}>{user.username || "No username"}</Text>
                     <Text style={styles.userEmail}>{user.email}</Text>
                     <View style={styles.userMeta}>
-                      <Text style={styles.userRole}>{user.isAdmin ? 'Admin' : 'User'}</Text>
+                      <View style={[styles.userRole, user.isAdmin && styles.adminRole]}>
+                        <Text style={[styles.roleText, user.isAdmin && styles.adminText]}>
+                          {user.isAdmin ? "Admin" : "User"}
+                        </Text>
+                      </View>
                       <Text style={styles.userAccounts}>Accounts: {user.bankAccounts?.length || 0}</Text>
                     </View>
                   </View>
                   <TouchableOpacity
-                    style={[
-                      styles.selectUserButton,
-                      selectedUser === user._id && styles.selectUserButtonSelected,
-                    ]}
+                    style={[styles.selectUserButton, selectedUser === user._id && styles.selectUserButtonSelected]}
                     onPress={() => handleUserSelect(user._id)}
                   >
-                    <Text style={styles.selectUserButtonText}>
-                      {selectedUser === user._id ? 'Selected' : 'Select'}
+                    <Text
+                      style={[
+                        styles.selectUserButtonText,
+                        selectedUser === user._id && styles.selectUserButtonTextSelected,
+                      ]}
+                    >
+                      {selectedUser === user._id ? "Selected" : "Select"}
                     </Text>
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
           )}
-          <Text style={styles.sectionTitle}>Create Bank Account</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Account Number*"
-            value={form.accountNumber}
-            onChangeText={text => handleChange('accountNumber', text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Account Type* (e.g., Savings, Checking)"
-            value={form.accountType}
-            onChangeText={text => handleChange('accountType', text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Balance*"
-            value={form.balance}
-            onChangeText={text => handleChange('balance', text)}
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Currency* (e.g., USD, EUR)"
-            value={form.currency}
-            onChangeText={text => handleChange('currency', text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Status (e.g., Active, Inactive)"
-            value={form.status}
-            onChangeText={text => handleChange('status', text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Interest Rate (%)"
-            value={form.interestRate}
-            onChangeText={text => handleChange('interestRate', text)}
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Minimum Balance"
-            value={form.minimumBalance}
-            onChangeText={text => handleChange('minimumBalance', text)}
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="User ID* (Owner of Account)"
-            value={form.userId}
-            onChangeText={text => handleChange('userId', text)}
-            editable={false}
-          />
-          <TouchableOpacity
-            style={[styles.actionCard, (!form.userId || loading) && { opacity: 0.6 }]}
-            onPress={handleSubmit}
-            disabled={loading || !form.userId}
-          >
-            <View style={styles.actionIcon}>
-              <Ionicons name="add-circle-outline" size={32} color="#1A1F71" />
-            </View>
-            <Text style={styles.actionTitle}>{loading ? 'Creating...' : 'Create Account'}</Text>
-          </TouchableOpacity>
+
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Create Bank Account</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Account Number*"
+              value={form.accountNumber}
+              onChangeText={(text) => handleChange("accountNumber", text)}
+              placeholderTextColor="#94a3b8"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Account Type* (e.g., Savings, Checking)"
+              value={form.accountType}
+              onChangeText={(text) => handleChange("accountType", text)}
+              placeholderTextColor="#94a3b8"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Balance*"
+              value={form.balance}
+              onChangeText={(text) => handleChange("balance", text)}
+              keyboardType="numeric"
+              placeholderTextColor="#94a3b8"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Currency* (e.g., USD, EUR)"
+              value={form.currency}
+              onChangeText={(text) => handleChange("currency", text)}
+              placeholderTextColor="#94a3b8"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Status (e.g., Active, Inactive)"
+              value={form.status}
+              onChangeText={(text) => handleChange("status", text)}
+              placeholderTextColor="#94a3b8"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Interest Rate (%)"
+              value={form.interestRate}
+              onChangeText={(text) => handleChange("interestRate", text)}
+              keyboardType="numeric"
+              placeholderTextColor="#94a3b8"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Minimum Balance"
+              value={form.minimumBalance}
+              onChangeText={(text) => handleChange("minimumBalance", text)}
+              keyboardType="numeric"
+              placeholderTextColor="#94a3b8"
+            />
+            <TextInput
+              style={[styles.input, styles.disabledInput]}
+              placeholder="User ID* (Owner of Account)"
+              value={form.userId}
+              onChangeText={(text) => handleChange("userId", text)}
+              editable={false}
+              placeholderTextColor="#94a3b8"
+            />
+
+            <TouchableOpacity
+              style={[styles.actionCard, (!form.userId || loading) && styles.actionCardDisabled]}
+              onPress={handleSubmit}
+              disabled={loading || !form.userId}
+            >
+              <LinearGradient
+                colors={!form.userId || loading ? ["#94a3b8", "#cbd5e1"] : ["#43e97b", "#38f9d7"]}
+                style={styles.actionGradient}
+              >
+                <Ionicons name="add-circle-outline" size={24} color="#fff" />
+                <Text style={styles.actionTitle}>{loading ? "Creating..." : "Create Account"}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ScrollView>
-  );
-};
+      </ScrollView>
+    </View>
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 24,
-    backgroundColor: '#1A1F71',
-    justifyContent: 'center',
+    flex: 1,
+    backgroundColor: "#f8fafc",
   },
-  adminCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  header: {
+    paddingTop: 60,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-    color: '#fff',
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 8,
-    textAlign: 'center',
-    color: 'rgba(255,255,255,0.7)',
+    color: "rgba(255,255,255,0.8)",
   },
-  formSection: {
+  scrollContent: {
+    padding: 20,
+  },
+  accessDenied: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+    backgroundColor: "#f8fafc",
+  },
+  accessDeniedText: {
+    fontSize: 18,
+    color: "#ef4444",
+    textAlign: "center",
+    marginTop: 16,
+    fontWeight: "500",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  loadingText: {
     marginTop: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 16,
     fontSize: 16,
-    backgroundColor: '#fff',
+    color: "#64748b",
+  },
+  adminCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 12,
-    marginTop: 16,
-  },
-  usersList: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1a202c",
     marginBottom: 16,
   },
+  usersList: {
+    marginBottom: 24,
+  },
   userCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
-    marginBottom: 8,
+    backgroundColor: "#f8fafc",
+    borderRadius: 12,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderColor: "#e2e8f0",
+  },
+  userIcon: {
+    width: 48,
+    height: 48,
+    backgroundColor: "#43e97b",
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  userInitial: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
   },
   userInfo: {
     flex: 1,
   },
   userName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#1a202c",
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 4,
+    color: "#64748b",
+    marginBottom: 8,
   },
   userMeta: {
-    flexDirection: 'row',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   userRole: {
+    backgroundColor: "#e2e8f0",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  adminRole: {
+    backgroundColor: "#fef3c7",
+  },
+  roleText: {
     fontSize: 12,
-    color: '#FFD700',
-    fontWeight: '500',
+    fontWeight: "600",
+    color: "#64748b",
+  },
+  adminText: {
+    color: "#d97706",
   },
   userAccounts: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: "#64748b",
   },
   selectUserButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingVertical: 8,
+    backgroundColor: "#e2e8f0",
+    paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 2,
+    borderColor: "transparent",
   },
   selectUserButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: "#43e97b",
+    borderColor: "#43e97b",
   },
   selectUserButtonText: {
-    color: '#FFFFFF',
+    color: "#64748b",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "600",
   },
-  actionCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  selectUserButtonTextSelected: {
+    color: "#fff",
+  },
+  formSection: {
     marginTop: 8,
   },
-  actionIcon: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#000',
+  input: {
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    fontSize: 16,
+    backgroundColor: "#f8fafc",
+    color: "#1a202c",
+  },
+  disabledInput: {
+    backgroundColor: "#f1f5f9",
+    color: "#94a3b8",
+  },
+  actionCard: {
+    borderRadius: 12,
+    overflow: "hidden",
+    marginTop: 8,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  actionCardDisabled: {
+    opacity: 0.6,
+  },
+  actionGradient: {
+    padding: 18,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
   },
   actionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 4,
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#fff",
   },
-});
+})
 
-export default CreateBankAccount; 
+export default CreateBankAccount

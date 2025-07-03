@@ -34,7 +34,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "http://192.168.100.112:1919/api/users/forgotpassword",
+        "http://192.168.1.77:1919/api/users/forgotpassword",
         { email }
       );
       Alert.alert(

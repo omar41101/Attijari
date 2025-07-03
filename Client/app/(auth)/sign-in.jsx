@@ -33,7 +33,7 @@ export default function SignIn() {
     };
 
     axios
-      .post('http://192.168.100.112:1919/api/users/auth', userData)
+      .post('http://192.168.1.77:1919/api/users/auth', userData)
       .then(res => {
         console.log('Login successful:', res.data);
         

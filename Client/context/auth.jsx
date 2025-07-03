@@ -68,7 +68,7 @@ export function AuthProvider({ children }) {
       // Call the backend logout endpoint
       // No need to send token in header for logout, as backend clears httpOnly cookie
       try {
-        await axios.post('http://192.168.100.85:1919/api/users/logout', {});
+        await axios.post('http://192.168.1.77:1919/api/users/logout', {});
         console.log('Backend logout successful');
       } catch (error) {
         console.error('Backend logout error:', error);

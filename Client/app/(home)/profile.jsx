@@ -78,7 +78,7 @@ export default function ProfilePage() {
       console.log("ProfilePage - Sending updateData:", updateData);
 
       const response = await axios.put(
-        'http://192.168.100.112:1919/api/users/profile',
+        'http://192.168.1.77:1919/api/users/profile',
         updateData,
         {
           headers: {

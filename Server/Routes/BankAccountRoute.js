@@ -1,6 +1,6 @@
 import express from 'express';
 import { authentificate, authorizeAdmin } from '../Middlewares/auth.js'; // Assuming admin creates accounts for others
-import { createBankAccount, getMyBankAccounts, transferFunds, getAccountTransactions, getAccountTransactionSummary, getBankAccountsByUserId } from '../Controllers/BankAccountController.js';
+import { createBankAccount, getMyBankAccounts, transferFunds, getAccountTransactions, getAccountTransactionSummary, getBankAccountsByUserId, updateBankAccount, deleteBankAccount } from '../Controllers/BankAccountController.js';
 
 const router = express.Router();
 
@@ -22,5 +22,10 @@ router.route('/:id/transactions').get(authentificate, getAccountTransactions);
 
 // Route for getting transaction summary for a specific bank account
 router.route('/:id/summary').get(authentificate, getAccountTransactionSummary);
+
+// Admin: Update or delete a bank account
+router.route('/:id')
+  .put(authentificate, authorizeAdmin, updateBankAccount)
+  .delete(authentificate, authorizeAdmin, deleteBankAccount);
 
 export default router; 

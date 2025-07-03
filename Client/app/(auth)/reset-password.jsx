@@ -56,7 +56,7 @@ export default function ResetPassword() {
     setIsLoading(true);
     try {
       const response = await axios.put(
-        `http://192.168.100.112:1919/api/users/resetpassword/${token}`,
+        `http://192.168.1.77:1919/api/users/resetpassword/${token}`,
         { password }
       );
       Alert.alert(

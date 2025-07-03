@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity, ActivityIn
 import axios from 'axios';
 import { useAuth } from '../../context/auth';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const API_BASE = 'http://192.168.100.112:1919/api';
+const API_BASE = 'http://192.168.1.77:1919/api';
 
 const Users = () => {
   const { user } = useAuth();
@@ -106,8 +107,9 @@ const Users = () => {
 
   if (!user?.isAdmin) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-        <Text style={{ fontSize: 18, color: 'red', textAlign: 'center' }}>
+      <View style={styles.accessDenied}>
+        <Ionicons name="shield-outline" size={64} color="#ef4444" />
+        <Text style={styles.accessDeniedText}>
           Access denied. Admins only.
         </Text>
       </View>
@@ -115,58 +117,81 @@ const Users = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.adminCard}>
-        <Text style={styles.title}>All Users (Admin)</Text>
+    <View style={styles.container}>
+      <LinearGradient colors={['#667eea', '#764ba2']} style={styles.header}>
+        <Text style={styles.title}>User Management</Text>
         <Text style={styles.subtitle}>Manage and view all registered users</Text>
+      </LinearGradient>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {loading ? (
-          <ActivityIndicator size="large" color="#007AFF" style={{ marginVertical: 16 }} />
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#667eea" />
+            <Text style={styles.loadingText}>Loading users...</Text>
+          </View>
         ) : (
           <View style={styles.usersSection}>
             {users.map((userItem) => (
               <View key={userItem._id} style={styles.userCard}>
                 <View style={styles.userHeader}>
                   <View style={styles.userIcon}>
-                    <Ionicons name="person" size={24} color="#1A1F71" />
+                    <Text style={styles.userInitial}>
+                      {(userItem.username || userItem.email).charAt(0).toUpperCase()}
+                    </Text>
                   </View>
                   <View style={styles.userInfo}>
                     <Text style={styles.userName}>{userItem.username || 'No username'}</Text>
                     <Text style={styles.userEmail}>{userItem.email}</Text>
                     <View style={styles.userRoleContainer}>
-                      <Text style={[styles.userRole, userItem.isAdmin && styles.adminRole]}>
-                        {userItem.isAdmin ? 'Administrator' : 'User'}
-                      </Text>
+                      <View style={[styles.userRole, userItem.isAdmin && styles.adminRole]}>
+                        <Text style={[styles.roleText, userItem.isAdmin && styles.adminText]}>
+                          {userItem.isAdmin ? 'Administrator' : 'User'}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                  <TouchableOpacity style={styles.editButton} onPress={() => openEditModal(userItem)}>
-                    <Ionicons name="create-outline" size={20} color="#FFD700" />
-                  </TouchableOpacity>
-                  {!userItem.isAdmin && (
-                    <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteUser(userItem)}>
-                      <Ionicons name="trash-outline" size={20} color="#FF6347" />
+                  <View style={styles.userActions}>
+                    <TouchableOpacity style={styles.editButton} onPress={() => openEditModal(userItem)}>
+                      <Ionicons name="create-outline" size={20} color="#667eea" />
                     </TouchableOpacity>
-                  )}
+                    {!userItem.isAdmin && (
+                      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteUser(userItem)}>
+                        <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
                 <View style={styles.userDetails}>
-                  <Text style={styles.userDetail}>ID: {userItem._id}</Text>
-                  <Text style={styles.userDetail}>
-                    Bank Accounts: {userItem.bankAccounts?.length || 0}
-                  </Text>
-                  <Text style={styles.userDetail}>
-                    Created: {new Date(userItem.createdAt).toLocaleDateString()}
-                  </Text>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="finger-print" size={16} color="#64748b" />
+                    <Text style={styles.userDetail}>ID: {userItem._id}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="wallet-outline" size={16} color="#64748b" />
+                    <Text style={styles.userDetail}>
+                      Bank Accounts: {userItem.bankAccounts?.length || 0}
+                    </Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="calendar-outline" size={16} color="#64748b" />
+                    <Text style={styles.userDetail}>
+                      Created: {new Date(userItem.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
                 </View>
               </View>
             ))}
           </View>
         )}
+        
         <TouchableOpacity style={styles.actionCard} onPress={fetchUsers}>
-          <View style={styles.actionIcon}>
-            <Ionicons name="refresh" size={32} color="#1A1F71" />
-          </View>
-          <Text style={styles.actionTitle}>Refresh Users</Text>
+          <LinearGradient colors={['#f093fb', '#f5576c']} style={styles.actionGradient}>
+            <Ionicons name="refresh" size={28} color="#fff" />
+            <Text style={styles.actionTitle}>Refresh Users</Text>
+          </LinearGradient>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
+
       {/* Edit User Modal */}
       <Modal
         visible={editModalVisible}
@@ -176,12 +201,19 @@ const Users = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit User Profile</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit User Profile</Text>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            
             <TextInput
               style={styles.input}
               placeholder="Username"
               value={editForm.username}
               onChangeText={text => handleEditChange('username', text)}
+              placeholderTextColor="#94a3b8"
             />
             <TextInput
               style={styles.input}
@@ -189,90 +221,121 @@ const Users = () => {
               value={editForm.email}
               onChangeText={text => handleEditChange('email', text)}
               keyboardType="email-address"
+              placeholderTextColor="#94a3b8"
             />
             <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Is Admin</Text>
+              <Text style={styles.switchLabel}>Administrator</Text>
               <Switch
                 value={editForm.isAdmin}
                 onValueChange={val => handleEditChange('isAdmin', val)}
-                trackColor={{ false: '#ccc', true: '#FFD700' }}
-                thumbColor={editForm.isAdmin ? '#FFD700' : '#fff'}
+                trackColor={{ false: '#e2e8f0', true: '#667eea' }}
+                thumbColor={editForm.isAdmin ? '#fff' : '#f1f5f9'}
               />
             </View>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalActionBtn} onPress={handleEditSubmit} disabled={editLoading}>
-                <Ionicons name="save-outline" size={22} color="#1A1F71" />
+              <TouchableOpacity 
+                style={[styles.modalActionBtn, styles.saveBtn]} 
+                onPress={handleEditSubmit} 
+                disabled={editLoading}
+              >
+                <Ionicons name="save-outline" size={20} color="#fff" />
                 <Text style={styles.modalActionText}>{editLoading ? 'Saving...' : 'Save'}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalActionBtn} onPress={() => setEditModalVisible(false)}>
-                <Ionicons name="close-circle-outline" size={22} color="#1A1F71" />
-                <Text style={styles.modalActionText}>Cancel</Text>
+              <TouchableOpacity 
+                style={[styles.modalActionBtn, styles.cancelBtn]} 
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Ionicons name="close-circle-outline" size={20} color="#64748b" />
+                <Text style={[styles.modalActionText, styles.cancelText]}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 24,
-    backgroundColor: '#1A1F71',
-    justifyContent: 'center',
+    flex: 1,
+    backgroundColor: '#f8fafc',
   },
-  adminCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  header: {
+    paddingTop: 60,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
     color: '#fff',
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 16,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  scrollContent: {
+    padding: 20,
+  },
+  accessDenied: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    backgroundColor: '#f8fafc',
+  },
+  accessDeniedText: {
+    fontSize: 18,
+    color: '#ef4444',
     textAlign: 'center',
-    color: 'rgba(255,255,255,0.7)',
+    marginTop: 16,
+    fontWeight: '500',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#64748b',
   },
   usersSection: {
     marginBottom: 20,
   },
   userCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   userHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   userIcon: {
-    width: 50,
-    height: 50,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    backgroundColor: '#667eea',
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
+  },
+  userInitial: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   userInfo: {
     flex: 1,
@@ -280,83 +343,89 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#1a202c',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 4,
+    color: '#64748b',
+    marginBottom: 8,
   },
   userRoleContainer: {
     alignSelf: 'flex-start',
   },
   userRole: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   adminRole: {
-    color: '#FFD700',
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    backgroundColor: '#fef3c7',
+  },
+  roleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  adminText: {
+    color: '#d97706',
+  },
+  userActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  editButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#eff6ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fef2f2',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   userDetails: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-    paddingTop: 12,
+    borderTopColor: '#f1f5f9',
+    paddingTop: 16,
+    gap: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   userDetail: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
-    marginBottom: 2,
+    fontSize: 14,
+    color: '#64748b',
   },
   actionCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  actionGradient: {
     padding: 20,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionIcon: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 30,
+    flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    gap: 12,
   },
   actionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  editButton: {
-    marginLeft: 8,
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 215, 0, 0.08)',
-  },
-  deleteButton: {
-    marginLeft: 8,
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 99, 71, 0.08)',
+    color: '#fff',
   },
   modalOverlay: {
     flex: 1,
@@ -365,76 +434,87 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#1A1F71',
+    backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 28,
+    padding: 24,
     width: '90%',
     maxWidth: 400,
-    alignItems: 'stretch',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   modalTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 18,
-    color: '#FFD700',
-    textAlign: 'center',
-    letterSpacing: 0.5,
+    color: '#1a202c',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#FFD700',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
     fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#1A1F71',
+    color: '#1a202c',
+    backgroundColor: '#f8fafc',
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 8,
-    padding: 8,
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
   },
   switchLabel: {
     fontSize: 16,
-    color: '#FFD700',
-    flex: 1,
     fontWeight: '600',
+    color: '#1a202c',
   },
   modalActions: {
     flexDirection: 'row',
-    marginTop: 8,
-    justifyContent: 'space-between',
+    gap: 12,
   },
   modalActionBtn: {
     flex: 1,
-    marginHorizontal: 4,
-    backgroundColor: '#FFD700',
-    borderRadius: 12,
-    alignItems: 'center',
-    paddingVertical: 12,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  saveBtn: {
+    backgroundColor: '#667eea',
+  },
+  cancelBtn: {
+    backgroundColor: '#f1f5f9',
   },
   modalActionText: {
-    color: '#1A1F71',
-    fontWeight: 'bold',
+    fontWeight: '600',
     fontSize: 16,
-    marginLeft: 6,
+    color: '#fff',
+  },
+  cancelText: {
+    color: '#64748b',
   },
 });
 
-export default Users; 
+export default Users;

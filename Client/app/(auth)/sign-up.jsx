@@ -118,7 +118,7 @@ export default function SignUp() {
       });
 
       const response = await axios.post(
-        "http://192.168.100.112:1919/api/users",
+        "http://192.168.1.77:1919/api/users",
         userData
       );
 
@@ -126,7 +126,7 @@ export default function SignUp() {
 
       // After successful sign up, automatically sign in the user
       const loginResponse = await axios.post(
-        "http://192.168.100.112:1919/api/users/auth",
+        "http://192.168.1.77:1919/api/users/auth",
         {
           email: formData.email,
           password: formData.password,

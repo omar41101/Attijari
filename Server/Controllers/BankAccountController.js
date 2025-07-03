@@ -244,8 +244,9 @@ const getAccountTransactionSummary = asyncHandler(async (req, res) => {
 const getBankAccountsByUserId = asyncHandler(async (req, res) => {
     const { userId } = req.query;
     if (!userId) {
-        res.status(400);
-        throw new Error('userId query parameter is required.');
+        // If no userId, return all bank accounts (admin only)
+        const accounts = await BankAccount.find({}).populate('user', 'username email');
+        return res.status(200).json(accounts);
     }
     const user = await User.findById(userId).populate('bankAccounts');
     if (!user) {
@@ -255,4 +256,37 @@ const getBankAccountsByUserId = asyncHandler(async (req, res) => {
     res.status(200).json(user.bankAccounts);
 });
 
-export { createBankAccount, getMyBankAccounts, transferFunds, getAccountTransactions, getAccountTransactionSummary, getBankAccountsByUserId };
+// @desc    Update a bank account (admin only)
+// @route   PUT /api/bankaccounts/:id
+// @access  Admin
+const updateBankAccount = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    const account = await BankAccount.findById(id);
+    if (!account) {
+        res.status(404);
+        throw new Error('Bank account not found.');
+    }
+    // Update fields
+    Object.keys(updates).forEach(key => {
+        account[key] = updates[key];
+    });
+    await account.save();
+    res.status(200).json(account);
+});
+
+// @desc    Delete a bank account (admin only)
+// @route   DELETE /api/bankaccounts/:id
+// @access  Admin
+const deleteBankAccount = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const account = await BankAccount.findById(id);
+    if (!account) {
+        res.status(404);
+        throw new Error('Bank account not found.');
+    }
+    await account.deleteOne();
+    res.json({ message: 'Bank account deleted' });
+});
+
+export { createBankAccount, getMyBankAccounts, transferFunds, getAccountTransactions, getAccountTransactionSummary, getBankAccountsByUserId, updateBankAccount, deleteBankAccount };

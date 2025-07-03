@@ -30,7 +30,7 @@ export default function TransferPage() {
       }
       try {
         const response = await axios.get(
-          "http://192.168.100.112:1919/api/bankaccounts/myaccounts",
+          "http://192.168.1.77:1919/api/bankaccounts/myaccounts",
           {
             headers: { Authorization: `Bearer ${user.token}` },
           }
@@ -64,7 +64,7 @@ export default function TransferPage() {
     setIsLoadingTransfer(true);
     try {
       const response = await axios.post(
-        "http://192.168.100.112:1919/api/bankaccounts/transfer",
+        "http://192.168.1.77:1919/api/bankaccounts/transfer",
         {
           sourceAccountNumber: userBankAccounts.find(acc => acc._id === sourceAccount)?.accountNumber, // Get account number from selected ID
           destinationAccountNumber,
