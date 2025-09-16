@@ -1,14 +1,14 @@
-"use client"
+ 
 
-import { useState, useEffect } from "react"
-import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native"
-import axios from "axios"
-import { useAuth } from "../../context/auth"
-import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
+import axios from "axios"
 import { LinearGradient } from "expo-linear-gradient"
+import { useRouter } from "expo-router"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
+import { useAuth } from "../../context/auth"
 
-const API_BASE = "http://192.168.1.77:1919/api"
+const API_BASE = "http://192.168.0.7:1919/api"
 
 const CreateBankAccount = () => {
   const { user } = useAuth()
@@ -17,9 +17,7 @@ const CreateBankAccount = () => {
     accountType: "",
     balance: "",
     currency: "",
-    status: "",
-    interestRate: "",
-    minimumBalance: "",
+    
     userId: "",
   })
   const [loading, setLoading] = useState(false)
@@ -95,9 +93,7 @@ const CreateBankAccount = () => {
         accountType: "",
         balance: "",
         currency: "",
-        status: "",
-        interestRate: "",
-        minimumBalance: "",
+       
         userId: selectedUser || "",
       })
     } catch (error) {
@@ -190,29 +186,8 @@ const CreateBankAccount = () => {
               onChangeText={(text) => handleChange("currency", text)}
               placeholderTextColor="#94a3b8"
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Status (e.g., Active, Inactive)"
-              value={form.status}
-              onChangeText={(text) => handleChange("status", text)}
-              placeholderTextColor="#94a3b8"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Interest Rate (%)"
-              value={form.interestRate}
-              onChangeText={(text) => handleChange("interestRate", text)}
-              keyboardType="numeric"
-              placeholderTextColor="#94a3b8"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Minimum Balance"
-              value={form.minimumBalance}
-              onChangeText={(text) => handleChange("minimumBalance", text)}
-              keyboardType="numeric"
-              placeholderTextColor="#94a3b8"
-            />
+         
+            
             <TextInput
               style={[styles.input, styles.disabledInput]}
               placeholder="User ID* (Owner of Account)"

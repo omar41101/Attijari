@@ -24,7 +24,7 @@ export default function NotificationsPage() {
 
     try {
       const response = await axios.get(
-        "http://192.168.1.77:1919/api/users/notifications",
+        "http://192.168.0.7:1919/api/users/notifications",
         {
           headers: { Authorization: `Bearer ${user.token}` },
         }
@@ -52,7 +52,7 @@ export default function NotificationsPage() {
   const handleMarkAsRead = async (notificationId) => {
     try {
       await axios.put(
-        `http://192.168.1.77:1919/api/users/notifications/${notificationId}/read`,
+        `http://192.168.0.7:1919/api/users/notifications/${notificationId}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${user.token}` },

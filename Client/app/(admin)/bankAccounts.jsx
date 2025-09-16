@@ -20,7 +20,7 @@ import { useAuth } from "../../context/auth"
 import { Ionicons } from "@expo/vector-icons"
 import { LinearGradient } from "expo-linear-gradient"
 
-const API_BASE = "http://192.168.1.77:1919/api"
+const API_BASE = "http://192.168.0.7:1919/api"
 
 const AdminBankAccounts = () => {
   const { user } = useAuth()
@@ -218,16 +218,11 @@ const AdminBankAccounts = () => {
                     </Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Ionicons name="trending-up-outline" size={16} color="#64748b" />
-                    <Text style={styles.accountDetail}>
-                      <Text style={styles.detailLabel}>Interest Rate:</Text> {acc.interestRate ?? "N/A"}
-                    </Text>
+                     <Text style={styles.accountDetail}>
+                     </Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Ionicons name="shield-outline" size={16} color="#64748b" />
-                    <Text style={styles.accountDetail}>
-                      <Text style={styles.detailLabel}>Min Balance:</Text> {acc.minimumBalance ?? "N/A"}
-                    </Text>
+                   
                   </View>
                 </View>
 
@@ -312,22 +307,7 @@ const AdminBankAccounts = () => {
                 onChangeText={(text) => handleEditChange("status", text)}
                 placeholderTextColor="#94a3b8"
               />
-              <TextInput
-                style={styles.input}
-                placeholder="Interest Rate"
-                value={editForm.interestRate}
-                onChangeText={(text) => handleEditChange("interestRate", text)}
-                keyboardType="numeric"
-                placeholderTextColor="#94a3b8"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Minimum Balance"
-                value={editForm.minimumBalance}
-                onChangeText={(text) => handleEditChange("minimumBalance", text)}
-                keyboardType="numeric"
-                placeholderTextColor="#94a3b8"
-              />
+             
 
               <View style={styles.modalActions}>
                 <Pressable

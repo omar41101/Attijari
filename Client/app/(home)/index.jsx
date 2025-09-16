@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Ionicons } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
-import { StatusBar } from "expo-status-bar"
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import {
   Alert,
   StyleSheet,
@@ -13,31 +13,32 @@ import {
   Dimensions,
   ScrollView,
   Animated,
-} from "react-native"
-import { useAuth } from "../../context/auth"
-import { useEffect, useState, useRef } from "react"
-import axios from "axios"
-import { PieChart } from "react-native-chart-kit"
-import { LinearGradient } from "expo-linear-gradient"
+} from "react-native";
+import { useAuth } from "../../context/auth";
+import { useEffect, useState, useRef } from "react";
+import axios from "axios";
+import { PieChart } from "react-native-chart-kit";
+import { LinearGradient } from "expo-linear-gradient";
+import api from "../../services/api";
 
-const screenWidth = Dimensions.get("window").width
-const API_BASE = "http://192.168.1.77:1919/api"
+const screenWidth = Dimensions.get("window").width;
+const API_BASE = "http://192.168.0.7:1919/api";
 
 export default function HomePage() {
-  const { user, signOut } = useAuth()
-  const router = useRouter()
-  const [bankAccounts, setBankAccounts] = useState([])
-  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
-  const [errorLoadingAccounts, setErrorLoadingAccounts] = useState(false)
-  const [expenseData, setExpenseData] = useState([])
-  const [isLoadingCharts, setIsLoadingCharts] = useState(true)
-  const [errorLoadingCharts, setErrorLoadingCharts] = useState(false)
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
+  const [errorLoadingAccounts, setErrorLoadingAccounts] = useState(false);
+  const [expenseData, setExpenseData] = useState([]);
+  const [isLoadingCharts, setIsLoadingCharts] = useState(true);
+  const [errorLoadingCharts, setErrorLoadingCharts] = useState(false);
 
   // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(30)).current
-  const scaleAnim = useRef(new Animated.Value(0.95)).current
-  const pulseAnim = useRef(new Animated.Value(1)).current
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Start entrance animations
@@ -57,7 +58,7 @@ export default function HomePage() {
         duration: 600,
         useNativeDriver: true,
       }),
-    ]).start()
+    ]).start();
 
     // Pulse animation for status badge
     Animated.loop(
@@ -72,123 +73,123 @@ export default function HomePage() {
           duration: 2000,
           useNativeDriver: true,
         }),
-      ]),
-    ).start()
-  }, [])
+      ])
+    ).start();
+  }, []);
 
   useEffect(() => {
     const fetchBankAccountsAndSummaries = async () => {
       if (!user?.token) {
-        setIsLoadingAccounts(false)
-        setErrorLoadingAccounts(true)
-        setIsLoadingCharts(false)
-        setErrorLoadingCharts(true)
-        console.error("User token not available.")
-        return
+        setIsLoadingAccounts(false);
+        setErrorLoadingAccounts(true);
+        setIsLoadingCharts(false);
+        setErrorLoadingCharts(true);
+        console.error("User token not available.");
+        return;
       }
 
       try {
         // Fetch bank accounts
-        const accountsResponse = await axios.get("http://192.168.1.77:1919/api/bankaccounts/myaccounts", {
-          headers: { Authorization: `Bearer ${user.token}` },
-        })
+        const accountsResponse = await api.get(
+          `/bankaccounts/myaccounts`,
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
+        );
 
-        setBankAccounts(accountsResponse.data)
-        setIsLoadingAccounts(false)
+        setBankAccounts(accountsResponse.data);
+        setIsLoadingAccounts(false);
 
         // Fetch transaction summaries for each account
-        const summaries = []
+        const summaries = [];
         for (const account of accountsResponse.data) {
-          const summaryResponse = await axios.get(`http://192.168.1.77:1919/api/bankaccounts/${account._id}/summary`, {
-            headers: { Authorization: `Bearer ${user.token}` },
-          })
-          summaries.push(summaryResponse.data)
+          const summaryResponse = await axios.get(
+            `${API_BASE}/bankaccounts/${account._id}/summary`,
+            {
+              headers: { Authorization: `Bearer ${user.token}` },
+            }
+          );
+          summaries.push(summaryResponse.data);
         }
 
         // Aggregate expense data for charting
-        const aggregatedExpenses = {}
+        const aggregatedExpenses = {};
         summaries.forEach((summary) => {
           for (const type in summary.transactionsByType) {
             if (type !== "Deposit" && type !== "Transfer") {
-              // Exclude deposits and transfers as income for charting expenses
-              aggregatedExpenses[type] = (aggregatedExpenses[type] || 0) + summary.transactionsByType[type]
+              aggregatedExpenses[type] =
+                (aggregatedExpenses[type] || 0) +
+                summary.transactionsByType[type];
             }
           }
-        })
+        });
 
         const chartData = Object.keys(aggregatedExpenses).map((type, index) => {
-          const colorOptions = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#98D8C8"]
-          const color = colorOptions[index % colorOptions.length]
+          const colorOptions = [
+            "#FF6B6B",
+            "#4ECDC4",
+            "#45B7D1",
+            "#96CEB4",
+            "#FFEAA7",
+            "#DDA0DD",
+            "#98D8C8",
+          ];
+          const color = colorOptions[index % colorOptions.length];
           return {
             name: type,
             population: aggregatedExpenses[type],
             color: color,
             legendFontColor: "#FFFFFF",
             legendFontSize: 14,
-          }
-        })
+          };
+        });
 
-        setExpenseData(chartData)
-        setIsLoadingCharts(false)
+        setExpenseData(chartData);
+        setIsLoadingCharts(false);
       } catch (error) {
-        console.error("Failed to fetch data for charts:", error.response?.data || error.message)
-        setErrorLoadingAccounts(true)
-        setErrorLoadingCharts(true)
-        Alert.alert("Error", "Failed to load banking data. Please try again later.")
+        console.error(
+          "Failed to fetch data:",
+          error.response?.data || error.message
+        );
+        setErrorLoadingAccounts(true);
+        setErrorLoadingCharts(true);
+        Alert.alert(
+          "Error",
+          "Failed to load banking data. Please try again later."
+        );
       }
-    }
+    };
 
-    fetchBankAccountsAndSummaries()
-  }, [user?.token])
+    fetchBankAccountsAndSummaries();
+  }, [user?.token]);
 
   const handleSignOut = async () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const result = await signOut()
-            if (result.success) {
-              Alert.alert("Signed Out", "You have been successfully signed out.", [
-                {
-                  text: "OK",
-                  onPress: () => router.replace("/"),
-                },
-              ])
-            } else {
-              Alert.alert("Error", "Failed to sign out. Please try again.", [{ text: "OK" }])
-            }
-          } catch (error) {
-            console.error("Sign out error:", error)
-            Alert.alert("Error", "An unexpected error occurred. Please try again.", [{ text: "OK" }])
-          }
-        },
-      },
-    ])
-  }
+    try {
+      await signOut();
+      router.replace("/(auth)/sign-in");
+    } catch (error) {
+      console.error("Sign out error:", error);
+      Alert.alert("Error", "Failed to sign out. Please try again.");
+    }
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-
-      {/* Enhanced Gradient Background */}
-      <LinearGradient colors={["#0F0C29", "#24243e", "#302b63"]} style={styles.backgroundGradient} />
-
-      {/* Floating Background Elements */}
+      <LinearGradient
+        colors={["#0F0C29", "#24243e", "#302b63"]}
+        style={styles.backgroundGradient}
+      />
       <View style={styles.backgroundElements}>
         <View style={[styles.floatingShape, styles.shape1]} />
         <View style={[styles.floatingShape, styles.shape2]} />
         <View style={[styles.floatingShape, styles.shape3]} />
         <View style={[styles.floatingShape, styles.shape4]} />
       </View>
-
-      {/* Enhanced Header */}
-      <LinearGradient colors={["rgba(255,255,255,0.1)", "rgba(255,255,255,0.05)"]} style={styles.header}>
+      <LinearGradient
+        colors={["rgba(255,255,255,0.1)", "rgba(255,255,255,0.05)"]}
+        style={styles.header}
+      >
         <Animated.View
           style={[
             styles.logoContainer,
@@ -198,32 +199,37 @@ export default function HomePage() {
             },
           ]}
         >
-          <LinearGradient colors={["#FFD700", "#FFA000", "#FF8F00"]} style={styles.logo}>
+          <LinearGradient
+            colors={["#FFD700", "#FFA000", "#FF8F00"]}
+            style={styles.logo}
+          >
             <Text style={styles.logoText}>F</Text>
           </LinearGradient>
           <View style={styles.brandInfo}>
-            <Text style={styles.brandName}>Fehri Bank</Text>
+            <Text style={styles.brandName}>E-Bank Bank</Text>
             <Text style={styles.brandTagline}>Premium Banking</Text>
           </View>
         </Animated.View>
-
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut} activeOpacity={0.8}>
-          <LinearGradient colors={["rgba(255,255,255,0.2)", "rgba(255,255,255,0.1)"]} style={styles.signOutGradient}>
+        <TouchableOpacity
+          style={styles.signOutButton}
+          onPress={handleSignOut}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={["rgba(255,255,255,0.2)", "rgba(255,255,255,0.1)"]}
+            style={styles.signOutGradient}
+          >
             <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
           </LinearGradient>
         </TouchableOpacity>
       </LinearGradient>
-
-      {/* Scrollable Content */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Show user dashboard only if NOT admin */}
         {!user?.isAdmin && (
           <>
-            {/* Enhanced Welcome Section */}
             <Animated.View
               style={[
                 styles.welcomeSection,
@@ -243,24 +249,36 @@ export default function HomePage() {
                   </View>
                   <View style={styles.welcomeInfo}>
                     <Text style={styles.welcomeText}>Welcome back!</Text>
-                    <Text style={styles.userName}>{user?.username || "User"}</Text>
+                    <Text style={styles.userName}>
+                      {user?.username || "User"}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.userDetails}>
                   <View style={styles.userDetailRow}>
-                    <Ionicons name="mail-outline" size={16} color="rgba(255,255,255,0.7)" />
+                    <Ionicons
+                      name="mail-outline"
+                      size={16}
+                      color="rgba(255,255,255,0.7)"
+                    />
                     <Text style={styles.userEmail}>{user?.email || ""}</Text>
                   </View>
                   <View style={styles.userDetailRow}>
-                    <Ionicons name="shield-checkmark-outline" size={16} color="rgba(255,255,255,0.7)" />
-                    <Text style={styles.userRole}>{user?.isAdmin ? "Administrator" : "Premium Member"}</Text>
+                    <Ionicons
+                      name="shield-checkmark-outline"
+                      size={16}
+                      color="rgba(255,255,255,0.7)"
+                    />
+                    <Text style={styles.userRole}>
+                      {user?.isAdmin ? "Administrator" : "Premium Member"}
+                    </Text>
                   </View>
                 </View>
-                <Text style={styles.subtitle}>Your personalized banking dashboard</Text>
+                <Text style={styles.subtitle}>
+                  Your personalized banking dashboard
+                </Text>
               </LinearGradient>
             </Animated.View>
-
-            {/* Enhanced Account Overview */}
             <Animated.View
               style={[
                 styles.accountOverviewContainer,
@@ -271,21 +289,30 @@ export default function HomePage() {
               ]}
             >
               <View style={styles.sectionHeader}>
-                <Text style={styles.accountOverviewTitle}>Your Accounts</Text>
+                <Text style={styles.accountOverviewTitle}>Vos comptes</Text>
                 <View style={styles.accountCount}>
-                  <Text style={styles.accountCountText}>{bankAccounts.length}</Text>
+                  <Text style={styles.accountCountText}>
+                    {bankAccounts.length}
+                  </Text>
                 </View>
               </View>
-
               {isLoadingAccounts ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="large" color="#FFD700" />
-                  <Text style={styles.loadingText}>Loading your accounts...</Text>
+                  <Text style={styles.loadingText}>
+                    Loading your accounts...
+                  </Text>
                 </View>
               ) : errorLoadingAccounts ? (
                 <View style={styles.errorContainer}>
-                  <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
-                  <Text style={styles.errorMessage}>Could not load accounts.</Text>
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={48}
+                    color="#FF6B6B"
+                  />
+                  <Text style={styles.errorMessage}>
+                    Could not load accounts.
+                  </Text>
                 </View>
               ) : bankAccounts.length > 0 ? (
                 bankAccounts.map((account, index) => (
@@ -300,36 +327,63 @@ export default function HomePage() {
                     ]}
                   >
                     <TouchableOpacity
-                      onPress={() => router.push({ pathname: "/(home)/transactions", params: { id: account._id } })}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(home)/transactions",
+                          params: { id: account._id },
+                        })
+                      }
                       activeOpacity={0.9}
                     >
                       <LinearGradient
-                        colors={["rgba(255,255,255,0.15)", "rgba(255,255,255,0.05)"]}
+                        colors={[
+                          "rgba(255,255,255,0.15)",
+                          "rgba(255,255,255,0.05)",
+                        ]}
                         style={styles.accountCardGradient}
                       >
                         <View style={styles.accountCardContent}>
                           <View style={styles.accountCardHeader}>
                             <View style={styles.accountTypeContainer}>
-                              <Ionicons name="wallet-outline" size={24} color="#FFD700" />
-                              <Text style={styles.accountType}>{account.accountType}</Text>
+                              <Ionicons
+                                name="wallet-outline"
+                                size={24}
+                                color="#FFD700"
+                              />
+                              <Text style={styles.accountType}>
+                                {account.accountType}
+                              </Text>
                             </View>
                             <View
                               style={[
                                 styles.statusIndicator,
-                                { backgroundColor: account.status === "Active" ? "#4CAF50" : "#FFA500" },
+                                {
+                                  backgroundColor:
+                                    account.status === "Active"
+                                      ? "#4CAF50"
+                                      : "#FFA500",
+                                },
                               ]}
                             />
                           </View>
-                          <Text style={styles.accountNumber}>•••• •••• •••• {account.accountNumber.slice(-4)}</Text>
+                          <Text style={styles.accountNumber}>
+                            **** **** **** {account.accountNumber.slice(-4)}
+                          </Text>
                           <View style={styles.balanceContainer}>
-                            <Text style={styles.balanceLabel}>Current Balance</Text>
+                            <Text style={styles.balanceLabel}>
+                              Solde actuelle
+                            </Text>
                             <Text style={styles.accountBalance}>
                               {account.balance.toFixed(2)} {account.currency}
                             </Text>
                           </View>
                         </View>
                         <View style={styles.accountCardArrow}>
-                          <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.6)" />
+                          <Ionicons
+                            name="chevron-forward"
+                            size={24}
+                            color="rgba(255, 255, 255, 0.6)"
+                          />
                         </View>
                       </LinearGradient>
                     </TouchableOpacity>
@@ -337,14 +391,20 @@ export default function HomePage() {
                 ))
               ) : (
                 <View style={styles.emptyContainer}>
-                  <Ionicons name="wallet-outline" size={64} color="rgba(255,255,255,0.3)" />
-                  <Text style={styles.noAccountsMessage}>No bank accounts found.</Text>
-                  <Text style={styles.noAccountsSubMessage}>Contact support to set up an account.</Text>
+                  <Ionicons
+                    name="wallet-outline"
+                    size={64}
+                    color="rgba(255,255,255,0.3)"
+                  />
+                  <Text style={styles.noAccountsMessage}>
+                    No bank accounts found.
+                  </Text>
+                  <Text style={styles.noAccountsSubMessage}>
+                    Contact support to set up an account.
+                  </Text>
                 </View>
               )}
             </Animated.View>
-
-            {/* Enhanced Expense Analysis Chart */}
             <Animated.View
               style={[
                 styles.chartContainer,
@@ -357,19 +417,30 @@ export default function HomePage() {
               <View style={styles.sectionHeader}>
                 <Text style={styles.chartTitle}>Expense Analysis</Text>
                 <View style={styles.chartIcon}>
-                  <Ionicons name="pie-chart-outline" size={20} color="#FFD700" />
+                  <Ionicons
+                    name="pie-chart-outline"
+                    size={20}
+                    color="#FFD700"
+                  />
                 </View>
               </View>
-
               {isLoadingCharts ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="large" color="#FFD700" />
-                  <Text style={styles.loadingText}>Analyzing your expenses...</Text>
+                  <Text style={styles.loadingText}>
+                    Analyzing your expenses...
+                  </Text>
                 </View>
               ) : errorLoadingCharts ? (
                 <View style={styles.errorContainer}>
-                  <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
-                  <Text style={styles.errorMessage}>Could not load expense data.</Text>
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={48}
+                    color="#FF6B6B"
+                  />
+                  <Text style={styles.errorMessage}>
+                    Could not load expense data.
+                  </Text>
                 </View>
               ) : expenseData.length > 0 ? (
                 <LinearGradient
@@ -390,13 +461,17 @@ export default function HomePage() {
                 </LinearGradient>
               ) : (
                 <View style={styles.emptyContainer}>
-                  <Ionicons name="analytics-outline" size={64} color="rgba(255,255,255,0.3)" />
-                  <Text style={styles.noChartDataMessage}>No expense data available for analysis.</Text>
+                  <Ionicons
+                    name="analytics-outline"
+                    size={64}
+                    color="rgba(255,255,255,0.3)"
+                  />
+                  <Text style={styles.noChartDataMessage}>
+                    No expense data available for analysis.
+                  </Text>
                 </View>
               )}
             </Animated.View>
-
-            {/* Enhanced Quick Actions (user) */}
             <Animated.View
               style={[
                 styles.actionsContainer,
@@ -406,69 +481,90 @@ export default function HomePage() {
                 },
               ]}
             >
-              <Text style={styles.actionsTitle}>Quick Actions</Text>
+              <Text style={styles.actionsTitle}>Actions rapide</Text>
               <View style={styles.actionRow}>
                 <TouchableOpacity
                   style={styles.actionCard}
                   onPress={() => router.push("/(home)/cards")}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient colors={["#FF6B6B", "#FF8E8E"]} style={styles.actionGradient}>
+                  <LinearGradient
+                    colors={["#FF6B6B", "#FF8E8E"]}
+                    style={styles.actionGradient}
+                  >
                     <View style={styles.actionIcon}>
                       <Ionicons name="card-outline" size={28} color="#FFFFFF" />
                     </View>
                     <Text style={styles.actionTitle}>Cards</Text>
-                    <Text style={styles.actionSubtitle}>Manage your cards</Text>
+                    <Text style={styles.actionSubtitle}>Gerer carte</Text>
                   </LinearGradient>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   style={styles.actionCard}
                   onPress={() => router.push("/(home)/transfer")}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient colors={["#4ECDC4", "#44A08D"]} style={styles.actionGradient}>
+                  <LinearGradient
+                    colors={["#4ECDC4", "#44A08D"]}
+                    style={styles.actionGradient}
+                  >
                     <View style={styles.actionIcon}>
-                      <Ionicons name="swap-horizontal-outline" size={28} color="#FFFFFF" />
+                      <Ionicons
+                        name="swap-horizontal-outline"
+                        size={28}
+                        color="#FFFFFF"
+                      />
                     </View>
                     <Text style={styles.actionTitle}>Transfer</Text>
-                    <Text style={styles.actionSubtitle}>Send money</Text>
+                    <Text style={styles.actionSubtitle}>Envoyer monnaie</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
-
               <View style={styles.actionRow}>
                 <TouchableOpacity
                   style={styles.actionCard}
                   onPress={() => router.push("/(home)/notifications")}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient colors={["#45B7D1", "#96C93D"]} style={styles.actionGradient}>
+                  <LinearGradient
+                    colors={["#45B7D1", "#96C93D"]}
+                    style={styles.actionGradient}
+                  >
                     <View style={styles.actionIcon}>
-                      <Ionicons name="notifications-outline" size={28} color="#FFFFFF" />
+                      <Ionicons
+                        name="notifications-outline"
+                        size={28}
+                        color="#FFFFFF"
+                      />
                     </View>
                     <Text style={styles.actionTitle}>Notifications</Text>
                     <Text style={styles.actionSubtitle}>View your inbox</Text>
                   </LinearGradient>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   style={styles.actionCard}
                   onPress={() => router.push("/(home)/profile")}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient colors={["#96CEB4", "#FFEAA7"]} style={styles.actionGradient}>
+                  <LinearGradient
+                    colors={["#96CEB4", "#FFEAA7"]}
+                    style={styles.actionGradient}
+                  >
                     <View style={styles.actionIcon}>
-                      <Ionicons name="person-outline" size={28} color="#FFFFFF" />
+                      <Ionicons
+                        name="person-outline"
+                        size={28}
+                        color="#FFFFFF"
+                      />
                     </View>
                     <Text style={styles.actionTitle}>Profile</Text>
-                    <Text style={styles.actionSubtitle}>Account settings</Text>
+                    <Text style={styles.actionSubtitle}>
+                      Prametre du compte
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
             </Animated.View>
-
-            {/* Enhanced Status Message */}
             <Animated.View
               style={[
                 styles.statusContainer,
@@ -478,18 +574,20 @@ export default function HomePage() {
                 },
               ]}
             >
-              <LinearGradient colors={["rgba(76, 175, 80, 0.2)", "rgba(76, 175, 80, 0.1)"]} style={styles.statusBadge}>
+              <LinearGradient
+                colors={["rgba(76, 175, 80, 0.2)", "rgba(76, 175, 80, 0.1)"]}
+                style={styles.statusBadge}
+              >
                 <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                <Text style={styles.statusText}>Successfully authenticated</Text>
+                <Text style={styles.statusText}>
+                  Successfully authenticated
+                </Text>
               </LinearGradient>
             </Animated.View>
           </>
         )}
-
-        {/* Enhanced Admin Dashboard */}
         {user?.isAdmin && (
           <>
-            {/* Admin Welcome Section */}
             <Animated.View
               style={[
                 styles.adminWelcomeSection,
@@ -505,18 +603,24 @@ export default function HomePage() {
               >
                 <View style={styles.adminHeader}>
                   <View style={styles.adminIcon}>
-                    <Ionicons name="shield-checkmark" size={48} color="#FFD700" />
+                    <Ionicons
+                      name="shield-checkmark"
+                      size={48}
+                      color="#FFD700"
+                    />
                   </View>
                   <View style={styles.adminInfo}>
-                    <Text style={styles.adminWelcomeText}>Administrator Panel</Text>
-                    <Text style={styles.adminUserName}>{user?.username || "Admin"}</Text>
+                    <Text style={styles.adminWelcomeText}>Administrator</Text>
+                    <Text style={styles.adminUserName}>
+                      {user?.username || "Admin"}
+                    </Text>
                   </View>
                 </View>
-                <Text style={styles.adminSubtitle}>System Management Dashboard</Text>
+                <Text style={styles.adminSubtitle}>
+                  System Management Dashboard
+                </Text>
               </LinearGradient>
             </Animated.View>
-
-            {/* Enhanced Admin Quick Actions */}
             <Animated.View
               style={[
                 styles.actionsContainer,
@@ -527,72 +631,136 @@ export default function HomePage() {
               ]}
             >
               <Text style={styles.actionsTitle}>Administrative Actions</Text>
-
               <TouchableOpacity
                 style={styles.adminActionCard}
                 onPress={() => router.push("/(admin)/createBankAccount")}
                 activeOpacity={0.8}
               >
-                <LinearGradient colors={["#43E97B", "#38F9D7"]} style={styles.adminActionGradient}>
+                <LinearGradient
+                  colors={["#43E97B", "#38F9D7"]}
+                  style={styles.adminActionGradient}
+                >
                   <View style={styles.adminActionIcon}>
-                    <Ionicons name="add-circle-outline" size={32} color="#FFFFFF" />
+                    <Ionicons
+                      name="add-circle-outline"
+                      size={32}
+                      color="#FFFFFF"
+                    />
                   </View>
                   <View style={styles.adminActionContent}>
-                    <Text style={styles.adminActionTitle}>Create Bank Account</Text>
-                    <Text style={styles.adminActionSubtitle}>Add account for any user</Text>
+                    <Text style={styles.adminActionTitle}>
+                      Creer un compte bancaire
+                    </Text>
+                    <Text style={styles.adminActionSubtitle}>
+                      Ajouter un compte pour un utilisateur
+                    </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={24}
+                    color="rgba(255,255,255,0.7)"
+                  />
                 </LinearGradient>
               </TouchableOpacity>
-
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => router.push("/(admin)/profile")}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={["#96CEB4", "#FFEAA7"]}
+                  style={styles.actionGradient}
+                >
+                  <View style={styles.actionIcon}>
+                    <Ionicons name="person-outline" size={28} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.actionTitle}>Profile</Text>
+                  <Text style={styles.actionSubtitle}>Parametre du compte</Text>
+                </LinearGradient>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.adminActionCard}
                 onPress={() => router.push("/(admin)/users")}
                 activeOpacity={0.8}
               >
-                <LinearGradient colors={["#667EEA", "#764BA2"]} style={styles.adminActionGradient}>
+                <LinearGradient
+                  colors={["#667EEA", "#764BA2"]}
+                  style={styles.adminActionGradient}
+                >
                   <View style={styles.adminActionIcon}>
                     <Ionicons name="people-outline" size={32} color="#FFFFFF" />
                   </View>
                   <View style={styles.adminActionContent}>
-                    <Text style={styles.adminActionTitle}>Manage Users</Text>
-                    <Text style={styles.adminActionSubtitle}>View and manage user accounts</Text>
+                    <Text style={styles.adminActionTitle}>
+                      Gerer utilisateurs
+                    </Text>
+                    <Text style={styles.adminActionSubtitle}>
+                    
+                      Voir et gerer les comptes utilisateurs
+                    </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={24}
+                    color="rgba(255,255,255,0.7)"
+                  />
                 </LinearGradient>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.adminActionCard}
                 onPress={() => router.push("/(admin)/cards")}
                 activeOpacity={0.8}
               >
-                <LinearGradient colors={["#4FACFE", "#00F2FE"]} style={styles.adminActionGradient}>
+                <LinearGradient
+                  colors={["#4FACFE", "#00F2FE"]}
+                  style={styles.adminActionGradient}
+                >
                   <View style={styles.adminActionIcon}>
                     <Ionicons name="card-outline" size={32} color="#FFFFFF" />
                   </View>
                   <View style={styles.adminActionContent}>
-                    <Text style={styles.adminActionTitle}>Card Management</Text>
-                    <Text style={styles.adminActionSubtitle}>Create, delete, and view cards</Text>
+                    <Text style={styles.adminActionTitle}>
+                      Gerer cartes
+                    </Text>
+                    <Text style={styles.adminActionSubtitle}>
+                    
+                      Creer , supprimer et voir les cartes
+                    </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={24}
+                    color="rgba(255,255,255,0.7)"
+                  />
                 </LinearGradient>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.adminActionCard}
                 onPress={() => router.push("/(admin)/bankAccounts")}
                 activeOpacity={0.8}
               >
-                <LinearGradient colors={["#F093FB", "#F5576C"]} style={styles.adminActionGradient}>
+                <LinearGradient
+                  colors={["#F093FB", "#F5576C"]}
+                  style={styles.adminActionGradient}
+                >
                   <View style={styles.adminActionIcon}>
                     <Ionicons name="wallet-outline" size={32} color="#FFFFFF" />
                   </View>
                   <View style={styles.adminActionContent}>
-                    <Text style={styles.adminActionTitle}>All Bank Accounts</Text>
-                    <Text style={styles.adminActionSubtitle}>View and manage all accounts</Text>
+                    <Text style={styles.adminActionTitle}>
+                     
+                      Tous les comptes bancaires
+                    </Text>
+                    <Text style={styles.adminActionSubtitle}>
+                     
+                      Voir et gerer tous les comptes
+                    </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={24}
+                    color="rgba(255,255,255,0.7)"
+                  />
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
@@ -600,7 +768,7 @@ export default function HomePage() {
         )}
       </ScrollView>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -1021,7 +1189,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 8,
   },
-  // Admin specific styles
   adminWelcomeSection: {
     marginBottom: 24,
     borderRadius: 20,
@@ -1103,7 +1270,7 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.8)",
     fontWeight: "500",
   },
-})
+});
 
 const chartConfig = {
   backgroundColor: "#0F0C29",
@@ -1115,4 +1282,4 @@ const chartConfig = {
   style: {
     borderRadius: 16,
   },
-}
+};

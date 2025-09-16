@@ -24,6 +24,7 @@ import {
 const router = express.Router();
 router
   .route("/")
+  //  http://localhost:1919/api/users
   .post(creatUser)
   .get(authentificate, authorizeAdmin, getAllUsers);
 router.post("/auth", loginUser);

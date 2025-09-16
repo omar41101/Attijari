@@ -10,7 +10,7 @@ const bankAccountSchema = mongoose.Schema(
         accountType: {
             type: String,
             required: true,
-            enum: ['Savings', 'Checking', 'Fixed Deposit'],
+            enum: ['Courant', 'Epargne'],
         },
         balance: {
             type: Number,
@@ -22,25 +22,13 @@ const bankAccountSchema = mongoose.Schema(
             required: true,
             default: 'USD',
         },
-        status: {
-            type: String,
-            required: true,
-            enum: ['Active', 'Inactive', 'Frozen', 'Closed'],
-            default: 'Active',
-        },
+        
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true,
         },
-        interestRate: {
-            type: Number,
-            default: 0,
-        },
-        minimumBalance: {
-            type: Number,
-            default: 0,
-        },
+     
         lastTransactionDate: {
             type: Date,
         },

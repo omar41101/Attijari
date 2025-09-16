@@ -17,7 +17,7 @@ import { useAuth } from "../../context/auth"
 import { Ionicons } from "@expo/vector-icons"
 import { LinearGradient } from "expo-linear-gradient"
 
-const API_BASE = "http://192.168.1.77:1919/api"
+const API_BASE = "http://192.168.0.7:1919/api"
 
 const AdminCards = () => {
   const { user } = useAuth()

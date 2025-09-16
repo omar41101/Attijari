@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../context/auth';
+import api from '../../services/api';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ export default function SignIn() {
   const { signIn } = useAuth();
   const router = useRouter();
 
-  function handleSubmit() {
+   function handleSubmit() {
     if (!email || !password) {
       Alert.alert(
         'Missing Information',
@@ -32,19 +33,13 @@ export default function SignIn() {
       password,
     };
 
-    axios
-      .post('http://192.168.1.77:1919/api/users/auth', userData)
+    // Use the api service instead of axios directly
+    api.post('/users/auth', userData)
       .then(res => {
         console.log('Login successful:', res.data);
         
         // Sign in the user immediately
-        signIn(res.data.token, {
-          _id: res.data._id,
-          username: res.data.username,
-          email: res.data.email,
-          isAdmin: res.data.isAdmin,
-          token: res.data.token,
-        });
+        signIn(res.data); // Make sure your signIn function expects the whole user object
         
         // Navigate immediately
         router.replace('/(home)');

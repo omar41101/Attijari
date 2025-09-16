@@ -14,9 +14,7 @@ const createBankAccount = asyncHandler(async (req, res) => {
         accountType,
         balance,
         currency,
-        status,
-        interestRate,
-        minimumBalance,
+       
         userId, // Assuming the admin sends the user ID
     } = req.body;
 
@@ -40,9 +38,6 @@ const createBankAccount = asyncHandler(async (req, res) => {
         accountType,
         balance,
         currency,
-        status,
-        interestRate,
-        minimumBalance,
         user: user._id, // Link the account to the user
     });
 

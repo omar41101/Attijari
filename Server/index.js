@@ -7,12 +7,21 @@ import bankAccountRoutes from './Routes/BankAccountRoute.js'
 import cardRoutes from './Routes/CardRoute.js'
 import BankAccount from './models/BankAccount.js'; // Import BankAccount model
 import connectDB from "./config/db.js";
+import cors from "cors";
 //import uploadRoutes from "./routes/uploadRoutes.js"
 dotenv.config();
 const port = process.env.PORT || 1919;
 
 connectDB();
 const app = express();
+
+app.use(cors({
+  origin: ['http://localhost:8081', 'exp://192.168.0.7:8081'],
+  credentials: true
+}));
+
+// Or allow all origins in development
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

@@ -118,7 +118,7 @@ export default function SignUp() {
       });
 
       const response = await axios.post(
-        "http://192.168.1.77:1919/api/users",
+        "http://192.168.0.7:1919/api/users",
         userData
       );
 
@@ -126,7 +126,7 @@ export default function SignUp() {
 
       // After successful sign up, automatically sign in the user
       const loginResponse = await axios.post(
-        "http://192.168.1.77:1919/api/users/auth",
+        "http://192.168.0.7:1919/api/users/auth",
         {
           email: formData.email,
           password: formData.password,
@@ -145,12 +145,12 @@ export default function SignUp() {
       });
 
       // Navigate immediately
-      router.replace("/(home)");
+      router.replace("/(auth)/sign-in");
 
       // Show welcome alert after navigation
       Alert.alert(
         'Welcome! 🎉',
-        `Welcome to Fehri Bank, ${formData.name}! Your account has been successfully created and you are now signed in.`,
+        `Welcome to E-Bank Bank, ${formData.name}! Your account has been successfully created and you are now signed in.`,
         [{ text: 'Get Started' }]
       );
 
@@ -231,7 +231,7 @@ export default function SignUp() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Text style={styles.logoText}>Fehri</Text>
+                  <Text style={styles.logoText}>E-Bank</Text>
                 </LinearGradient>
               </View>
             </View>
@@ -246,7 +246,7 @@ export default function SignUp() {
                 >
                   <View style={styles.form}>
                     <Text style={styles.title}>Create Account</Text>
-                    <Text style={styles.subtitle}>Join Fehri Bank today</Text>
+                    <Text style={styles.subtitle}>Join E-Bank Bank today</Text>
 
                     {error ? (
                       <View style={styles.errorContainer}>
@@ -417,7 +417,7 @@ export default function SignUp() {
                 >
                   <View style={styles.form}>
                     <Text style={styles.title}>Create Account</Text>
-                    <Text style={styles.subtitle}>Join Fehri Bank today</Text>
+                    <Text style={styles.subtitle}>Join E-Bank Bank today</Text>
 
                     {error ? (
                       <View style={styles.errorContainer}>
